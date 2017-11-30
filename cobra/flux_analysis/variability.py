@@ -3,6 +3,7 @@
 from __future__ import absolute_import
 
 import pandas
+import math
 from optlang.symbolics import Zero
 from warnings import warn
 from itertools import chain
@@ -320,8 +321,9 @@ def find_essential_genes(model, threshold=0.01):
         model.reactions.get_by_id(rid).genes for rid in
         non_zero_flux_reactions))
     deletions = single_gene_deletion(model, gene_list=genes_to_check,
-                                     method='fba')
-    gene_ids = [k for k, v in deletions.items() if not v]
+                                     method='fba').to_dict()['growth']
+    gene_ids = [list(k)[0] for k, v in deletions.items()
+                if v < threshold or math.isnan(v)]
     return set(model.genes.get_by_any(gene_ids))
 
 
@@ -347,8 +349,10 @@ def find_essential_reactions(model, threshold=0.01):
     tolerance = model.solver.configuration.tolerances.feasibility
     non_zero_flux_reactions = list(
         solution[solution.fluxes.abs() > tolerance].index)
-    deletions = single_reaction_deletion(model,
-                                         reaction_list=non_zero_flux_reactions,
-                                         method='fba')
-    reaction_ids = [k for k, v in deletions.items() if not v]
+    deletions = single_reaction_deletion(
+        model,
+        reaction_list=non_zero_flux_reactions,
+        method='fba').to_dict()['growth']
+    reaction_ids = [list(k)[0] for k, v in deletions.items()
+                if v < threshold or math.isnan(v)]
     return set(model.reactions.get_by_any(reaction_ids))
