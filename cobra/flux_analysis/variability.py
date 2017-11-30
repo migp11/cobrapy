@@ -354,5 +354,5 @@ def find_essential_reactions(model, threshold=0.01):
         reaction_list=non_zero_flux_reactions,
         method='fba').to_dict()['growth']
     reaction_ids = [list(k)[0] for k, v in deletions.items()
-                if v < threshold or math.isnan(v)]
+                    if v < threshold or math.isnan(v)]
     return set(model.reactions.get_by_any(reaction_ids))
